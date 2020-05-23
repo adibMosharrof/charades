@@ -73,10 +73,10 @@ class Trainer():
 
         def part(x): return itertools.islice(x, int(len(x)*args.train_size))
         end = time.time()
-        for i, (input, target, meta) in enumerate(part(loader)):
+        for i, (input, target) in enumerate(part(loader)):
             data_time.update(time.time() - end)
 
-            target = target.long().cuda(async=True)
+            target = target.long().cuda()
             input_var = torch.autograd.Variable(input.cuda())
             target_var = torch.autograd.Variable(target)
             output = model(input_var)
@@ -88,7 +88,7 @@ class Trainer():
             else:
                 loss = criterion(output, target_var)
             prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-            losses.update(loss.data[0], input.size(0))
+            losses.update(loss.data, input.size(0))
             top1.update(prec1[0], input.size(0))
             top5.update(prec5[0], input.size(0))
 
@@ -125,7 +125,7 @@ class Trainer():
         def part(x): return itertools.islice(x, int(len(x)*args.val_size))
         end = time.time()
         for i, (input, target, meta) in enumerate(part(loader)):
-            target = target.long().cuda(async=True)
+            target = target.long().cuda()
             input_var = torch.autograd.Variable(input.cuda(), volatile=True)
             target_var = torch.autograd.Variable(target, volatile=True)
             output = model(input_var)
@@ -165,7 +165,7 @@ class Trainer():
 
         end = time.time()
         for i, (input, target, meta) in enumerate(loader):
-            target = target.long().cuda(async=True)
+            target = target.long().cuda()
             assert target[0,:].eq(target[1,:]).all(), "val_video not synced"
             input_var = torch.autograd.Variable(input.cuda(), volatile=True)
             output = model(input_var)
