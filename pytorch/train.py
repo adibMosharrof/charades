@@ -124,7 +124,7 @@ class Trainer():
 
         def part(x): return itertools.islice(x, int(len(x)*args.val_size))
         end = time.time()
-        for i, (input, target, meta) in enumerate(part(loader)):
+        for i, (input, target) in enumerate(part(loader)):
             target = target.long().cuda()
             input_var = torch.autograd.Variable(input.cuda(), volatile=True)
             target_var = torch.autograd.Variable(target, volatile=True)
@@ -132,7 +132,7 @@ class Trainer():
             loss = criterion(output, target_var)
 
             prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-            losses.update(loss.data[0], input.size(0))
+            losses.update(loss.data, input.size(0))
             top1.update(prec1[0], input.size(0))
             top5.update(prec5[0], input.size(0))
             batch_time.update(time.time() - end)
@@ -164,9 +164,9 @@ class Trainer():
         model.eval()
 
         end = time.time()
-        for i, (input, target, meta) in enumerate(loader):
+        for i, (input, target) in enumerate(loader):
             target = target.long().cuda()
-            assert target[0,:].eq(target[1,:]).all(), "val_video not synced"
+#             assert target[0,:].eq(target[1,:]).all(), "val_video not synced"
             input_var = torch.autograd.Variable(input.cuda(), volatile=True)
             output = model(input_var)
             output = torch.nn.Softmax(dim=1)(output)
@@ -174,8 +174,9 @@ class Trainer():
             # store predictions
             output_video = output.mean(dim=0)
             outputs.append(output_video.data.cpu().numpy())
-            gts.append(target[0,:])
-            ids.append(meta['id'][0])
+#             gts.append(target[0,:])
+            gts.append(target)
+#             ids.append(meta['id'][0])
             batch_time.update(time.time() - end)
             end = time.time()
 
